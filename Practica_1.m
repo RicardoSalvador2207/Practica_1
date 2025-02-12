@@ -1,54 +1,54 @@
-function dXdt = Espacio_estados(t, z)
-    %Parametros
-    Xc = z(1);       
-    dXc = z(2);      
-    alpha = z(3);    
-    dalpha = z(4);   
-    Ip = 0.0079;     
-    Mc = 0.7031;     
-    lp = 0.3302;     
-    Mp = 0.23;       
-    Fc = 0;          
-    Beq = 4.3;       
-    g = 9.81;        
-    Bp = 0.0024;     
+function Practica_1
+    tspan = [0 10];
+    x0 = [0, 0, deg2rad(1), 0];  
 
-    % Denominador comun
-    Denominador_comun = (Mc + Mp) * Ip + Mc * Mp * lp^2 + Mp^2 * lp^2 * sin(alpha)^2;
+    % Resolver el sistema de ecuaciones diferenciales
+    [t, x] = ode45(@pendulo, tspan, x0);
 
-    % Calculo de aceleraciones
-    ddXc = ((Ip + Mp * lp^2) * Fc + Mp^2 * lp^2 * g * cos(alpha) * sin(alpha) - (Ip + Mp * lp^2) * Beq * dXc - (Ip * Mp * lp - Mp^2 * lp^3) * dalpha^2 * sin(alpha) - Mp * lp * dalpha * cos(alpha) * Bp) / Denominador_comun;
-
-    ddalpha = ((Mc + Mp) * Mp * g * lp * sin(alpha) - (Mc + Mp) * Bp * dalpha + Fc * Mp * lp * cos(alpha) - Mp^2 * lp^2 * dalpha^2 * sin(alpha) * cos(alpha) - Beq * Mp * lp * dXc * cos(alpha)) / Denominador_comun;
-
-    % Vector de salida
-    dXdt = [dXc; ddXc; dalpha; ddalpha];
+    % Graficar los resultados
+    figure;
+    plot(t, x);
+    xlabel('Tiempo (s)');
+    ylabel('Estados');
+    legend('Xc', 'dXc', 'A', 'dA');
+    title('Simulación del péndulo invertido');
+    grid on;
 end
 
-tspan = [0, 10];
+function dx = pendulo(~, x)
+    %Definición de parámetros 
+    Ip = 0.0079;   % Momento de inercia del péndulo
+    Mc = 0.7031;   % Masa del carrito
+    lp = 0.3302;   % Longitud del péndulo
+    Mp = 0.23;     % Masa del péndulo
+    Fc = 0;        % Fuerza del motor
+    Beq = 4.3;     % Coeficiente de amortiguamiento eq
+    g = 9.81;      % Gravedad
+    Bp = 0.0024;   % Coeficiente de amortiguamiento
 
-% Condiciones iniciales
-x0 = 0;             
-dx0 = 0;            
-alpha0 = deg2rad(1); 
-dalpha0 = 0;        
 
-X0 = [x0; dx0; alpha0; dalpha0]; 
+    % Variables de estado
+    x1 = x(1); % Xc (posición del carrito)
+    x2 = x(2); % dXc (velocidad del carrito)
+    x3 = x(3); % A (ángulo del péndulo)
+    x4 = x(4); % dA (velocidad angular del péndulo)
 
-[t, X] = ode45(@Espacio_estados, tspan, X0);
 
-% Graficar resultados
-figure;
-subplot(2, 1, 1);
-plot(t, X(:, 1), 'LineWidth', 1.5); 
-xlabel('Tiempo [s]');
-ylabel('Posición del carro [m]');
-title('Evolución de la posición del carro');
-grid on;
+    % Denominador común
+    denominador_comun = (Mc + Mp) * Ip + Mc * Mp * lp^2 + Mp^2 * lp^2 * sin(x3)^2;
 
-subplot(2, 1, 2);
-plot(t, X(:, 2), 'LineWidth', 1.5); 
-xlabel('Tiempo [s]');
-ylabel('Ángulo del péndulo [rad]');
-title('Evolución del ángulo del péndulo');
-grid on;
+    % Sistema de ecuaciones diferenciales
+    ddXc = ((Ip + Mp * lp^2) * Fc + Mp^2 * lp^2 * g * cos(x3) * sin(x3) - ...
+            (Ip + Mp * lp^2) * Beq * x2 - (Ip * Mp * lp - Mp^2 * lp^3) * x4^2 * sin(x3) - ...
+            Mp * lp * x4 * cos(x3) * Bp) / denominador_comun;
+
+    dda =   ((Mc + Mp) * Mp * g * lp * sin(x3) - (Mc + Mp) * Bp * x4 + ...
+            Fc * Mp * lp * cos(x3) - Mp^2 * lp^2 * x4^2 * sin(x3) * cos(x3) - ...
+            Beq * Mp * lp * x2 * cos(x3)) / denominador_comun;
+
+    dx = zeros(4,1);
+    dx(1) = x2;
+    dx(2) = ddXc;
+    dx(3) = x4;
+    dx(4) = dda;
+end
